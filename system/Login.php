@@ -7,7 +7,7 @@ class Login extends DataBase{
 	public $msgUsr;
 	public $data = array();
 
-	public function Login($tabla=null){
+	public function __construct($tabla=null){
 		if($tabla!=null){
 			$this->DataBase($tabla);
 		}
@@ -30,8 +30,8 @@ class Login extends DataBase{
 			$this->msgUsr = "Debe llenar todos los campos";
 		}else{
 			$this->columns = "usuarios_id,usuarios_nick,usuarios_pass,usuarios_mail,usuarios_nombres,usuarios_apellidos,usuarios_nivel,usuarios_session";
-			$this->where = "usuarios_nick='".$this->_mysql_real_escape_string($this->data[user])."'";
-			$this->whereAnd = "usuarios_pass = '".$this->_encript($this->_mysql_real_escape_string($this->data[pass]))."'";
+			$this->where = "usuarios_nick='".$this->_mysqli_real_escape_string($this->data["user"])."'";
+			$this->whereAnd = "usuarios_pass = '".$this->_encript($this->_mysqli_real_escape_string($this->data["pass"]))."'";
 			$this->_query("SELECT");
 			$user = $this->q_fetch_assoc;
 			if($this->q_num_rows == 1){
