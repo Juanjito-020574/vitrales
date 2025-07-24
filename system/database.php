@@ -12,7 +12,7 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 	private $lc_mess_ = "SET @@session.lc_messages = 'es_ES'";
 
 	/** Funcion Constructora. Devuelve la tabla y la lista de campos*/
-	public function DataBase($tabla=null){
+	public function __construct($tabla=null){
 		if($tabla){
 			$this->tabla=$tabla;
 			$this->q_desc=$this->_queryDesc($tabla);
@@ -20,21 +20,20 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 	}
 	/** Conectar a la base de datos*/
 	protected function open_db(){
-		$this->link = mysql_connect(self::$db_host,self::$db_user,self::$db_pass);// or die 'ERROR';
-		mysql_select_db(self::$db_name,$this->link);
-		mysql_query($this->names_,$this->link);
-		mysql_query($this->lc_mess_);
-		mysql_query("SET SESSION GROUP_CONCAT_MAX_LEN=1024000;");
+		$this->link = new mysqli(self::$db_host,self::$db_user,self::$db_pass,self::$db_name);
+		mysqli_query($this->link,$this->names_);
+		mysqli_query($this->link,$this->lc_mess_);
+		mysqli_query($this->link,"SET SESSION GROUP_CONCAT_MAX_LEN=1024000;");
 //		$this->_querySel();
 	}
 	/** Desconectar la base de datos*/
 	protected function close_db(){
 //		mysql_free_result($this->link);
-		mysql_close($this->link);
+		mysqli_close($this->link);
 	}
 
 	private function _querySel(){
-		$querySel = "SELECT SQL_CALC_FOUND_ROWS $this->columns \nFROM $this->tabla \n".
+		$querySel = "SELECT SQL_CALC_FOUND_ROWS $this->columns \nFROM ".$this->tabla." \n".
 			($this->join1 ? " LEFT JOIN $this->join1 \n" : "").
 			($this->join2 ? " LEFT JOIN $this->join2 \n" : "").
 			($this->join3 ? " RIGHT JOIN $this->join3 \n" : "").
@@ -53,12 +52,12 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 	}
 	public function _queyExtra(){
 		$this->open_db();
-			$this->q_src=mysql_query($this->query,$this->link);
-			$this->q_qty_rows=mysql_query('FOUND_ROWS();');
+			$this->q_src=mysqli_query($this->link,$this->query);
+			$this->q_qty_rows=mysqli_query($this->link,'FOUND_ROWS();');
 			$this->q_query=$this->query;
 		//	$this->q_num_rows=mysql_num_rows($this->q_src);
 		//	$this->q_fetch_assoc=mysql_fetch_assoc($this->q_src);
-			$this->q_aff_rows=mysql_affected_rows($this->link);
+			$this->q_aff_rows=mysqli_affected_rows($this->link);
 			$this->q_message = "Tiene $result[num_rows] registros.";
 		$this->close_db();
 	}
@@ -66,13 +65,13 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 	public function _queryDesc($table){
 //		include('functions.php');
 		$this->open_db();
-		$qry=mysql_query("SHOW FULL COLUMNS FROM $table",$this->link);
-		$rows = mysql_fetch_assoc($qry);
+		$qry=mysqli_query($this->link,"SHOW FULL COLUMNS FROM $table");
+		$rows = mysqli_fetch_assoc($qry);
 		$propiedadesTabla=array('campo'=>'','titulo'=>'','visible'=>1,'nuevo'=>'input','edit'=>'input');
 		do{
 			parse_str($rows['Comment'],$comment);
 			$row[$rows['Field']]=array_merge($propiedadesTabla,$comment);
-		}while($rows = mysql_fetch_assoc($qry));
+		}while($rows = mysqli_fetch_assoc($qry));
 		$pass=substr(md5($_SERVER['REMOTE_ADDR'].microtime().rand(1,100000)),0,6);
 		foreach($row as $i=>$v){
 			foreach($v as $vi=>$vv){
@@ -98,34 +97,34 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 		switch($type){
 			case 'SELECT':
 				$this->_querySel();
-				$this->q_src = mysql_query($this->query,$this->link);
-				$this->q_qty_rows=mysql_fetch_assoc(mysql_query('SELECT FOUND_ROWS() as `fr`;',$this->link));
+				$this->q_src = mysqli_query($this->link,$this->query);
+				$this->q_qty_rows=mysqli_fetch_assoc(mysqli_query($this->link,'SELECT FOUND_ROWS() as `fr`;'));
 				$this->q_query = $this->query;
-				$this->q_num_rows = mysql_num_rows($this->q_src);
-				$this->q_fetch_assoc = mysql_fetch_assoc($this->q_src);
+				$this->q_num_rows = mysqli_num_rows($this->q_src);
+				$this->q_fetch_assoc = mysqli_fetch_assoc($this->q_src);
 				$this->q_message = "Tiene $this->q_num_rows registros.";
-				$this->q_err = "(cod: ".mysql_errno($this->link).") ".mysql_error($this->link)."<br/>";
+				$this->q_err = "(cod: ".mysqli_errno($this->link).") ".mysqli_error($this->link)."<br/>";
 			break;
 			case 'UPDATE':
-				$this->q_src=mysql_query($this->query,$this->link);
+				$this->q_src=mysqli_query($this_link,$this->query);
 				$this->q_query=$this->query;
-				$this->q_aff_rows = mysql_affected_rows($this->link);
+				$this->q_aff_rows = mysqli_affected_rows($this->link);
 				$this->q_mensaje = "Se han modificado $this->q_aff_rows registros ";
-				$this->q_err = "(cod: ".mysql_errno($this->link)."): ".mysql_error($this->link)."<br/>";
+				$this->q_err = "(cod: ".mysqli_errno($this->link)."): ".mysqli_error($this->link)."<br/>";
 			break;
 			case 'INSERT':
-				$this->q_src=mysql_query($this->query,$this->link);
+				$this->q_src=mysqli_query($this->link,$this->query);
 				$this->q_query=$this->query;
-				$this->q_aff_rows=mysql_affected_rows($this->link);
+				$this->q_aff_rows=mysqli_affected_rows($this->link);
 				$this->q_message="Se han insertado $this->q_aff_rows registros ";
-				$this->q_err = "(cod: ".mysql_errno($this->link)."): ".mysql_error($this->link)."<br/>";
+				$this->q_err = "(cod: ".mysqli_errno($this->link)."): ".mysqli_error($this->link)."<br/>";
 			break;
 			case 'DELETE':
-				$this->q_src=mysql_query($this->query,$this->link);
+				$this->q_src=mysqli_query($this_link,$this->query);
 				$this->q_query=$this->query;
-				$this->q_aff_rows=mysql_affected_rows($this->link);
+				$this->q_aff_rows=mysqli_affected_rows($this->link);
 				$this->q_mensaje="Se han eliminado $this->q_aff_rows registros ";
-				$this->q_err = "(cod: ".mysql_errno($this->link)."): ".mysql_error($this->link)."<br/>";
+				$this->q_err = "(cod: ".mysqli_errno($this->link)."): ".mysqli_error($this->link)."<br/>";
 			break;
 			default:
 			break;
@@ -164,24 +163,24 @@ $q_aff_rows,$q_message,$q_err,$q_qty_rows,$q_desc;
 			}
 		}
 	}
-	public function _mysql_real_escape_string($cadena){
+	public function _mysqli_real_escape_string($cadena){
 		$this->open_db();
-		return mysql_real_escape_string($cadena,$this->link);
+		return mysqli_real_escape_string($this->link,$cadena);
 	}
 
-	/** $tabla es la tabla $campos son los campos de la talba, el primer campo siempre debe ser el campo 
+	/** $tabla es la tabla $campos son los campos de la talba, el primer campo siempre debe ser el campo
 	 *  id, codigo etc. por que es el campo vinculante si hay un solo campo se supone que es el id
 	 *  si Existen mas campos vincularemos el id y concatenaremos el resto de campos.
 	*/
 	public function funSelect($tabla,$campos,$noid=false){
 		$this->open_db();
 		$qryText="SELECT $campos FROM $tabla";
-		$qry=mysql_query($qryText,$this->link);
-		$row=mysql_fetch_assoc($qry);
+		$qry=mysqli_query($this->link,$qryText);
+		$row=mysqli_fetch_assoc($qry);
 		$cmp=explode(',',$campos);
 		do{
 			$arr[$row[$cmp[0]]]=($noid?'':$row[$cmp[0]]." ").$row[$cmp[1]];
-		}while($row=mysql_fetch_assoc($qry));
+		}while($row=mysqli_fetch_assoc($qry));
 		return $arr;//$qryText;
 		$this->close_db();
 	}
