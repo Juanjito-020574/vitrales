@@ -1,6 +1,6 @@
 <?PHP
 class DataBase{//para el subir al FTP borrar despues del '=' hasta los comentarios '//'
-	private static $db_host='72.29.64.235',$db_user='librosandinos_mysql',$db_pass='mysql_2019',$db_name='librosandinos_vitrales';
+	private static $db_host='72.29.64.235',$db_user='USERFACIL',$db_pass='CONTRASEÑASFACILES',$db_name='DBFACIL';
 //	private static $db_host='localhost',$db_user='root',$db_pass='',$db_name='alcon';
 	public $sess='la',$columns='*',$tabla,$join1,$join2,$join3,$join4,$where,$whereOr,
 $whereAnd,$group,$order,$limit,$query="",$q_src,$q_query,$q_fetch_assoc,$q_num_rows,
