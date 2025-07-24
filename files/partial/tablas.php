@@ -69,7 +69,7 @@ do{
 		}
 	}
 	$tb.="</tr>";
-}while($row=mysql_fetch_assoc($$tabla->q_src));
+}while($row=mysqli_fetch_assoc($$tabla->q_src));
 $th.="$thh</tr></thead>";
 $tb.="</tbody>";
 $nuevoreg="<tbody class='nuevoreg' id='tber_$tabla'><form name='er_$tabla' id='er_$tabla'><tr><td>...</td>";
